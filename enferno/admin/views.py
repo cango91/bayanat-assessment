@@ -837,7 +837,7 @@ def api_bulletins():
     su = SearchUtils(request.json, cls='Bulletin')
     queries, ops = su.get_query()
     result = Bulletin.query.filter(*queries.pop(0))
-
+    print('heyo')
     # nested queries
     if len(queries) > 0:
         while queries:

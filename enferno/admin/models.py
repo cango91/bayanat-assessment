@@ -6,6 +6,8 @@ from functools import wraps
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
+from enum import Enum
+
 import pandas as pd
 from dateutil.parser import parse
 from flask_babel import gettext
@@ -1219,6 +1221,11 @@ class Bulletin(db.Model, BaseMixin):
     """
     SQL Alchemy model for bulletins
     """
+    class VerificationStatus(Enum):
+            VERIFIED = 'Verified'
+            UNVERIFIED = 'Unverified'
+            FALSE_FAKE = 'False/Fake'
+    
     extend_existing = True
 
     id = db.Column(db.Integer, primary_key=True)
@@ -1316,13 +1323,19 @@ class Bulletin(db.Model, BaseMixin):
     documentation_date = db.Column(
         db.DateTime, index=True
     )
+    verification_date = db.Column(
+        db.DateTime, index=True
+    )
 
     status = db.Column(db.String(255))
     source_link = db.Column(db.String(255))
     source_link_type = db.Column(db.Boolean, default=False)
 
     # ref field : used for etl tagging etc ..
-    ref = db.Column(ARRAY(db.String))
+    # ref = db.Column(ARRAY(db.String))
+    
+    # verification status, one of ['verified','unverified','fake/false']
+    verification_status = db.Column(db.String(16), default='Unverified', index=True)
 
     # extra fields used by etl etc ..
     originid = db.Column(db.String, index=True)
@@ -1397,6 +1410,12 @@ class Bulletin(db.Model, BaseMixin):
 
     # populate object from json dict
     def from_json(self, json):
+        
+        def verification_status_from_json(status: str) -> self.VerificationStatus:
+            try:
+                return self.VerificationStatus(status.upper().replace("/", "_"))
+            except ValueError:
+                return None
 
         self.originid = json["originid"] if "originid" in json else None
         self.title = json["title"] if "title" in json else None
@@ -1404,6 +1423,8 @@ class Bulletin(db.Model, BaseMixin):
 
         self.title_ar = json["title_ar"] if "title_ar" in json else None
         self.sjac_title_ar = json["sjac_title_ar"] if "sjac_title_ar" in json else None
+        
+        self.verification_status = json["verification_status"] if "verification_status" in json else 'Unverified'
 
         # assigned to
         if "assigned_to" in json:
@@ -1421,7 +1442,7 @@ class Bulletin(db.Model, BaseMixin):
         self.comments = json["comments"] if "comments" in json else None
         self.source_link = json["source_link"] if "source_link" in json else None
         self.source_link_type = json.get('source_link_type', False)
-        self.ref = json["ref"] if "ref" in json else []
+        #self.ref = json["ref"] if "ref" in json else []
 
         # Locations
         if "locations" in json:
@@ -1598,6 +1619,9 @@ class Bulletin(db.Model, BaseMixin):
         self.documentation_date = json.get('documentation_date', None)
         if self.documentation_date == '':
             self.documentation_date = None
+        self.verification_date = json.get('verification_date', None)
+        if self.verification_date == '':
+            self.verification_date = None
         if "comments" in json:
             self.comments = json["comments"]
 
@@ -1643,6 +1667,8 @@ class Bulletin(db.Model, BaseMixin):
             "source_link_type": getattr(self, 'source_link_type', False),
             "publish_date": DateHelper.serialize_datetime(self.publish_date),
             "documentation_date": DateHelper.serialize_datetime(self.documentation_date),
+            "verification_status": self.verification_status,
+            "verification_date": DateHelper.serialize_datetime(self.verification_date),
             "comments": self.comments or "",
         }
 
@@ -1659,6 +1685,8 @@ class Bulletin(db.Model, BaseMixin):
             'description': self.serialize_column('description'),
             'publish_date': self.serialize_column('publish_date'),
             'documentation_date': self.serialize_column('documentation_date'),
+            "verification_status": self.serialize_column('verification_status'),
+            "verification_date": self.serialize_column('verification_date'),
 
             'labels': convert_simple_relation(self.labels),
             'verified_labels': convert_simple_relation(self.ver_labels),
@@ -1867,9 +1895,11 @@ class Bulletin(db.Model, BaseMixin):
             "comments": self.comments or None,
             "source_link": self.source_link or None,
             "source_link_type": self.source_link_type or None,
-            "ref": self.ref or None,
+            #"ref": self.ref or None,
             "publish_date": DateHelper.serialize_datetime(self.publish_date),
             "documentation_date": DateHelper.serialize_datetime(self.documentation_date),
+            "verification_date": DateHelper.serialize_datetime(self.verification_date),
+            "verification_status": self.verification_status,
             "status": self.status,
             "review": self.review if self.review else None,
             "review_action": self.review_action if self.review_action else None,
@@ -1913,6 +1943,8 @@ class Bulletin(db.Model, BaseMixin):
             "source_link": self.source_link or None,
             "publish_date": DateHelper.serialize_datetime(self.publish_date),
             "documentation_date": DateHelper.serialize_datetime(self.documentation_date),
+            "verification_date": DateHelper.serialize_datetime(self.verification_date),
+            "verification_status": self.verification_status,
 
         }
 
