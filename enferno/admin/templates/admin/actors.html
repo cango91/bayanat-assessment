@@ -13,6 +13,7 @@
     'admin/partials/export_drawer.html' %}
             <v-main>
                 {% include 'admin/partials/actor_advsearch.html' %}
+                {% include 'admin/partials/actor_dummy_dialog.html' %}
                 <v-container class="container--fluid">
 
                     <v-card>
@@ -78,6 +79,8 @@
 
 
                                         <v-spacer></v-spacer>
+                                        <v-btn @click="openDialog" color="primary" dark
+                                                   class="ma-2">{{ _('Open Dialog') }}</v-btn>
                                         {% if current_user.roles_in(['Admin','DA']) %}
                                             <v-btn @click="editItem" color="primary" dark
                                                    class="ma-2">{{ _('New Actor') }}</v-btn>
@@ -353,6 +356,7 @@
             mixins: [mediaMixin],
 
             data: () => ({
+                dummyDialogExpand: false,
 
                 translations: translations,
 
@@ -1245,6 +1249,10 @@
                             this.refresh(this.options);
                         });
 
+                },
+
+                openDialog(){
+                    this.dummyDialogExpand = !this.dummyDialogExpand;
                 },
 
 
