@@ -102,13 +102,15 @@
                                 </v-card>
                             </v-col>
                             <v-col cols="12" md="4">
-                                <v-combobox
+                                <v-select
 
                                         small-chips
-                                        multiple
-                                        v-model="editedItem.ref"
-                                        label="{{ _('Ref') }}"
-                                ></v-combobox>
+                                        v-model="editedItem.verification_status"
+                                        label="{{ _('VerificationStatus') }}"
+                                        :items="translations.verificationStatuses_"
+                                        return-object
+                                
+                                ></v-select>
 
                             </v-col>
 

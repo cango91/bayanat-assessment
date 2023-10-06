@@ -224,11 +224,11 @@ Vue.component("bulletin-card", {
       </v-chip>
         </v-card>
 
-      <!-- Refs -->
-      <v-card v-if="bulletin.ref && bulletin.ref.length" outlined class="ma-2 pa-2 d-flex align-center flex-grow-1"
+      <!-- Verification Status -->
+      <v-card v-if="bulletin.verification_status && bulletin.verification_status.length" outlined class="ma-2 pa-2 d-flex align-center flex-grow-1"
       color="grey lighten-5">
-        <div class="caption grey--text mr-2">{{ i18n.ref_ }}</div>
-        <v-chip x-small v-for="e in bulletin.ref" class="caption black--text mx-1">{{ e }}</v-chip>
+        <div class="caption grey--text mr-2">{{ i18n.VerificationStatus_ }}</div>
+        <v-chip x-small class="caption black--text mx-1">{{ bulletin.verification_status }}</v-chip>
 
       </v-card>
 
